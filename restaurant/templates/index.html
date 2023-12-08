@@ -41,9 +41,19 @@
     <nav>
       <ul>
         <li><a href="{% url 'home' %}">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">Menu</a></li>
-        <li><a href="#">Book</a></li>
+        <li><a href="{% url 'about' %}">About</a></li>
+        <li><a href="{% url 'menu' %}">Menu</a></li>
+        <li><a href="{% url 'book' %}">Book</a></li>
+        
+        
+          {% if user.is_authenticated %}
+            <li>Welcome, {{ user.username }}!</li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+          {% else %}
+            <li><a href="{% url 'register' %}">Register</a></li>
+            <li><a href="{% url 'login' %}">Login</a></li>
+          {% endif %}
+ 
       </ul>
   </nav>
 <body>

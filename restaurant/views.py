@@ -1,10 +1,8 @@
-# from django.shortcuts import render
-
-
-# # Create your views here.
-# def index(request):
-#     return render(request, 'index.html', {})
-
+from django.shortcuts import render,redirect
+from .forms import BookingForm
+from datetime import datetime
+from django.core import serializers
+from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 # restaurant/views.py
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser,AllowAny
@@ -14,48 +12,88 @@ from .models import Menu, Booking
 from .serializers import MenuSerializer, BookingSerializer
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
+from django.contrib import messages
+# from .forms import NewUserForm
+# Create your views here.
+# def index(request):
+#     return render(request, 'index.html')
+# def book_page(request):
+#     return render(request, 'book.html')
+# def menu_page(request):
+#     return render(request, 'menu.html')
+# def about(request):
+#     return render(request, 'about.html')
+# def reservations(request):
+#     return render(request, 'bookings.html')
 
-@api_view(['POST'])
+# Create your views here.
+def home(request):
+    return render(request, 'index.html')
+
+def about(request):
+    return render(request, 'about.html')
+
+def reservations(request):
+    date = request.GET.get('date',datetime.today().date())
+    bookings = Booking.objects.all()
+    booking_json = serializers.serialize('json', bookings)
+    return render(request, 'bookings.html',{"bookings":booking_json})
+
+def book(request):
+    form = BookingForm()
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            form.save()
+    context = {'form':form}
+    return render(request, 'book.html', context)
+
+def menu(request):
+    menu_data = Menu.objects.all()
+    main_data = {"menu": menu_data}
+    return render(request, 'menu.html', {"menu": main_data})
+
+
+
+@api_view(['GET','POST'])
 @permission_classes([AllowAny]) 
-def customer_register_view(request):
-    if request.method=='POST':
-        serializer=CustomerRegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Registration successful'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    return Response({'message': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    
-    username=request.data.get('username')
-    password=request.data.get('password')
-    
-    if not username or not password:
-        return Response({'message': 'Both username and password are required.'}, status=400)
-
-    user=authenticate(request,username=username,password=password)
-    
-    if user is not None:
-        login(request,user)
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user) 
+            return redirect('home')  
     else:
-        return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    
-# log out
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def logout_view(request):
-    if request.auth:
-        request.auth.delete()
+        form = UserCreationForm()
+    return render(request, 'register.html', {'form': form})
+
+
+def login_request(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request=request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.info(request, f"You are now logged in as {username}")
+                return redirect('home')
+            else:
+                messages.error(request, "Invalid username or password.")
+        else:
+            messages.error(request, "Invalid username or password.")
+    form = AuthenticationForm()
+    return render(request = request,
+                    template_name = "login.html",
+                    context={"form":form})
+
+
+def logout_request(request):
     logout(request)
-    return Response({'message': 'Logout successful'}, status=200)
+    messages.info(request, "Logged out successfully!")
+    return redirect("home")
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated]) 
@@ -99,7 +137,8 @@ def single_menu_item(request,pk):
     
 # booking routes
 @api_view(['GET', 'POST'])
-def all_bookings(request):
+@permission_classes([IsAuthenticated]) 
+def bookings(request):
     if request.method == 'GET':
         booking_items = Booking.objects.all()
         serializer = BookingSerializer(booking_items, many=True)
@@ -113,6 +152,7 @@ def all_bookings(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated]) 
 def single_booking(request,pk):
     try:
         booking_item = Booking.objects.get(pk=pk)

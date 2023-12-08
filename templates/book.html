@@ -23,8 +23,8 @@
             <!-- Step 9: Part one -->
           </p>
           <p>
-            <label for="first_name">Name:</label>
-            <input type="text" name="first_name" id="first_name" required />
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" required />
           </p>
           <p>
             <label for="no_of_guests">Party Size:</label>
@@ -124,9 +124,10 @@
   }
 
   document.getElementById("button").addEventListener("click", function (e) {
-    console.log(document.getElementById("first_name").value)
+    console.log(document.getElementById("name").value)
     const formdata = {
-      first_name: document.getElementById("first_name").value,
+      name: document.getElementById("name").value,
+      no_of_guests: document.getElementById("no_of_guests").value,
       booking_date: document.getElementById("booking_date").value,
       reservation_slot: document.getElementById("reservation_slot").value,
     };

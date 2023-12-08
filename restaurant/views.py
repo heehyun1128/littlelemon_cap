@@ -13,6 +13,11 @@ from .serializers import MenuSerializer, BookingSerializer
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authtoken.models import Token
 from django.contrib import messages
+
+from datetime import datetime
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
 # from .forms import NewUserForm
 # Create your views here.
 # def index(request):
@@ -135,24 +140,48 @@ def single_menu_item(request,pk):
         menu_item.delete()
         return Response({'message': 'Menu Item Deleted Successfully.'}, status=status.HTTP_200_OK)
     
-# booking routes
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated]) 
-def bookings(request):
-    if request.method == 'GET':
-        booking_items = Booking.objects.all()
-        serializer = BookingSerializer(booking_items, many=True)
-        return Response(serializer.data)
+# # booking routes
+# @api_view(['GET', 'POST'])
+# # @permission_classes([IsAuthenticated]) 
+# def bookings(request):
+#     if request.method == 'GET':
+#         booking_items = Booking.objects.all()
+#         serializer = BookingSerializer(booking_items, many=True)
+#         return Response(serializer.data)
 
-    elif request.method == 'POST':
-        serializer=BookingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Booking added successfully'}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     elif request.method == 'POST':
+#         serializer=BookingSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({'message': 'Booking added successfully'}, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@csrf_exempt
+def bookings(request):
+    if request.method == 'POST':
+        data=json.load(request)
+        exist = Booking.objects.filter(booking_date=data['booking_date']).filter(
+            reservation_slot=data['reservation_slot']).exists()
+        if exist==False:
+            booking = Booking(
+                name=data['name'],
+                no_of_guests=data['no_of_guests'],
+                booking_date=data['booking_date'],
+                reservation_slot=data['reservation_slot'],
+            )
+            booking.save()
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+    
+    date = request.GET.get('date',datetime.today().date())
+
+    bookings = Booking.objects.all().filter(booking_date=date)
+    booking_json = serializers.serialize('json', bookings)
+
+    return HttpResponse(booking_json, content_type='application/json') 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated]) 
+# @permission_classes([IsAuthenticated]) 
 def single_booking(request,pk):
     try:
         booking_item = Booking.objects.get(pk=pk)

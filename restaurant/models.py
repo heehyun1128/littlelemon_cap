@@ -16,6 +16,8 @@ class Booking(models.Model):
     booking_date=models.DateField()
     reservation_slot = models.SmallIntegerField(default=10)
     # user=models.ForeignKey(User,on_delete=models.CASCADE)
+    def __str__(self): 
+        return self.name
     
 class Menu(models.Model):
     id = models.AutoField(primary_key=True)

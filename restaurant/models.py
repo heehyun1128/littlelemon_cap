@@ -2,6 +2,16 @@ from django.db import models
 from django.core.validators import MaxValueValidator
 
 # Create your models here.
+#define Serializer class for User model
+from django.contrib.auth.models import User
+from rest_framework import serializers
+
+class UserSerializer(serializers.ModelSerializer):
+
+     class Meta:
+        model = User
+        fields = ['url', 'username', 'email', 'groups']
+        
 class Booking(models.Model):
     id = models.AutoField(primary_key=True)
     name=models.CharField(max_length=255)

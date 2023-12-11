@@ -2,15 +2,17 @@
 
 - git clone https://github.com/heehyun1128/littlelemon_cap.git
 
-- python manage.py runserver
+- run the following command to start server
+    
+    -   python manage.py runserver
 
 
 ## Django API && Templating
 
 - Navigate to http://localhost:8000/admin/ && Log in as superuser to manage users, bookings, and menu items
 
-    - Username:superuser
-    - password:Super1128
+    - Username: superuser
+    - password: Super1128
 
 - Navigate to http://localhost:8000/restaurant/ to:
 

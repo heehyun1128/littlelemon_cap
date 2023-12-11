@@ -34,8 +34,29 @@
 <script>
   const bookings = JSON.parse('{{ bookings|safe }}')
   console.log(bookings);
-  const pretty_json = JSON.stringify(bookings,null,2)
-  document.getElementById('bookings').innerHTML = pretty_json
+  // const pretty_json = JSON.stringify(bookings,null,2)
+bookings.forEach(booking => {
+
+  const date = booking.fields.booking_date
+  console.log('aaa',booking.fields.name)
+  const name = booking.fields.name
+
+  const numOfGuests=booking.fields.no_of_guests
+  let guest = ""
+  if(numOfGuests===1){
+    guest="Guest"
+  }else{
+    guest="Guests"
+  }
+
+  const p = document.createElement('p');
+p.innerText = `${name} - ${date} - ${numOfGuests} ${guest}`;
+console.log('ppp',p)
+  // document.getElementById('bookings').innerHTML = pretty_json
+  document.getElementById('bookings').appendChild(p)
+});
+
+
 </script>
 {% endblock %}
 
